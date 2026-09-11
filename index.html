@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<link rel='canonical' href='https://amos-mig.github.io/podcast-episode-release-monitor-demo/'>
+<title>Podcast Release Monitor</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{background:#0b0d12;color:#e8eaf0;font:14.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding-bottom:40px}
+a{color:#10b981}
+.ban{background:#10b981;color:#04241a;padding:8px 16px;font-size:13px;text-align:center}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+h1{font-size:clamp(24px,5vw,34px);margin:30px 0 8px;letter-spacing:-.5px}
+h1 .a{color:#10b981}
+.sub{color:#9aa3b2;max-width:660px;margin-bottom:22px}
+.panel{background:#14171f;border:1px solid #262b36;border-radius:10px}
+.tbar{display:flex;gap:6px;align-items:center;padding:9px 12px;border-bottom:1px solid #262b36;background:#10131a;border-radius:10px 10px 0 0}
+.dot{width:10px;height:10px;border-radius:50%;background:#262b36}
+.ttl{margin-left:8px;font-size:12px;color:#9aa3b2}
+#out{padding:14px;height:340px;overflow-y:auto;font-size:12.5px}
+.l{white-space:pre-wrap;word-break:break-word;margin:1px 0}
+.dim{color:#9aa3b2}.ok{color:#10b981}.err{color:#ef4444}.json{color:#8fa0b8}
+.inrow{display:flex;gap:9px;border-top:1px solid #262b36;padding:10px 12px;align-items:center}
+.ps{color:#10b981}
+#cmd{flex:1;background:none;border:0;outline:0;color:#e8eaf0;font:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{background:#14171f;border:1px solid #262b36;color:#9aa3b2;border-radius:6px;padding:6px 11px;font:inherit;font-size:12px;cursor:pointer}
+.chip:hover{border-color:#10b981;color:#10b981}
+.note{font-size:12px;color:#9aa3b2;margin-top:10px}
+h2{font-size:16px;margin:36px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:12px}
+.card{background:#14171f;border:1px solid #262b36;border-radius:10px;padding:14px}
+.card h3{font-size:13.5px;margin-bottom:6px}
+.card p{font-size:12.5px;color:#9aa3b2}
+.card.lock{border-style:dashed;opacity:.8}
+.code{background:#14171f;border:1px solid #262b36;border-radius:10px;padding:14px;font-size:12.5px;overflow-x:auto;color:#9aa3b2;white-space:pre;margin:0 0 18px}
+.code b{color:#e8eaf0;font-weight:normal}
+.cta{display:inline-block;background:#10b981;color:#04241a;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none;font-size:15px}
+.cta:hover{filter:brightness(1.08)}
+.foot{border-top:1px solid #262b36;margin-top:44px;padding-top:16px;font-size:12.5px;color:#9aa3b2;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+</style>
+</head>
+<body>
+<div class='ban'>Live demo — feed checks are simulated in your browser. The full script watches live RSS around the clock ↓</div>
+<div class='wrap'>
+<h1>Podcast Release Monitor</h1>
+<p class='sub'>Watches podcast feeds for new episodes — from your shows and your competitors&rsquo;. Instant alerts, structured guest / topic / duration metadata. Built for guest outreach and PR timing.</p>
+
+<div class='panel'>
+ <div class='tbar'><span class='dot'></span><span class='dot'></span><span class='dot'></span><span class='ttl'>monitor.py — sandbox (simulated)</span></div>
+ <div id='out'></div>
+ <div class='inrow'><span class='ps'>$</span><input id='cmd' placeholder='type a command · or click a chip below' autocomplete='off' spellcheck='false'></div>
+</div>
+<div class='chips'>
+ <button class='chip'>check deep-stack</button>
+ <button class='chip'>check founders-unplugged</button>
+ <button class='chip'>check https://rss.acme-corp.com/internal-show.xml</button>
+ <button class='chip'>watch deep-stack</button>
+ <button class='chip'>status</button>
+</div>
+<p class='note'>Simulated — responses are computed deterministically in your browser. The real monitor.py fetches live RSS, diffs against saved state and dispatches real alerts. Raw-feed equivalent: <span style='color:#e8eaf0'>curl -s https://feeds.example.com/deep-stack.xml | python monitor.py parse --json</span></p>
+
+<h2>What&rsquo;s inside</h2>
+<div class='grid'>
+ <div class='card'><h3>Any feed, zero keys</h3><p>Point it at any public RSS feed — your shows, guest shows, competitors&rsquo;. Plain stdlib polling: no accounts, no API quotas.</p></div>
+ <div class='card'><h3>Structured metadata</h3><p>Every check captures GUID, title, guest, topic and duration — the fields you need for outreach timing. The sandbox above computes them live.</p></div>
+ <div class='card lock'><h3>Instant alerts 🔒</h3><p>Email, Slack and generic webhooks the moment an episode drops — not at your next manual check. <i>In the full script.</i></p></div>
+ <div class='card lock'><h3>Guest tracking 🔒</h3><p>Fuzzy-matches guest names across the whole watchlist, flags first-time appearances, keeps per-person history. <i>In the full script.</i></p></div>
+ <div class='card lock'><h3>Ops-free at scale 🔒</h3><p>OPML import for hundreds of feeds, persistent state, CSV/JSON export — one process that just runs. <i>In the full script.</i></p></div>
+</div>
+
+<h2>What you&rsquo;re buying</h2>
+<div class='code'># monitor.py — watchlist excerpt (3 of ~40 lines)
+WATCHLIST = [
+    'https://feeds.simplecast.com/deep-stack',
+    'https://feeds.transistor.fm/founders-unplugged',
+    'competitor:https://feeds.libsyn.com/rival-fm',
+]
+ALERT_VIA = ['email:pr@yourco.com', 'slack:#guest-outreach']
+
+$ python monitor.py --once
+<b>  deep-stack          new: '#142 — Epoxy deploys with Mara Chen' · 47 min → alert sent</b>
+  founders-unplugged  no change
+<b>  rival-fm            new: '#88 — The pricing teardown' · 36 min → alert sent</b></div>
+<p><a class='cta' href='https://amosmign.gumroad.com/l/podcast-episode-release-monitor'>Get the full monitor · $29</a><span class='note' style='display:inline-block;margin:0 0 0 14px'>Single Python file · stdlib only · set it up once, forget it</span></p>
+
+<div class='foot'><span>Podcast Release Monitor</span><span><a href='https://kits.amosmignery.dev'>kits.amosmignery.dev</a> · <a href='https://github.com/Amos-Mig/podcast-episode-release-monitor-demo'>GitHub</a> · <a href='https://amosmign.gumroad.com/l/podcast-episode-release-monitor'>Gumroad</a></span></div>
+</div>
+<script>
+const out=document.getElementById('out'),inp=document.getElementById('cmd');
+const TOPICS=['deploy pipelines','edge caching','vector search','on-call burnout','design systems','federated auth','llm evals','monorepo tooling','price anchoring','hiring your first pm'];
+const GUESTS=['Mara Chen','Dev Okafor','Priya Natarajan','Sam Whitfield','Lena Vogel','Tobi Adeyemi','June Park','Ravi Menon'];
+const WATCH=new Map();let busy=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}return h}
+function sp(t,c){const s=document.createElement('span');if(c)s.className=c;s.textContent=t;return s}
+function L(c){const d=document.createElement('div');d.className='l'+(c?' '+c:'');out.append(d);out.scrollTop=out.scrollHeight;return d}
+function feed(a){const url=a.startsWith('http')?a:'https://feeds.example.com/'+a.toLowerCase().replace(/[^a-z0-9-]+/g,'-')+'.xml';
+ const slug=url.split('/').pop().split('.')[0];
+ return{url,slug,name:slug.split('-').map(w=>w?w[0].toUpperCase()+w.slice(1):w).join(' '),path:url.slice(url.indexOf('/',8))}}
+function gen(f){const s=hash(f.url),base=100+s%140,lat=80+s%340;
+ const T=[(n,t,g)=>`#${n} — ${t}, honestly, with ${g}`,(n,t,g)=>`#${n}: why ${t} breaks (with ${g})`,(n,t,g)=>`#${n} — shipping ${t}, feat. ${g}`,(n,t,g)=>`#${n} · ${g} on ${t}`];
+ const eps=[];for(let i=0;i<3;i++){const n=base-i,g=GUESTS[(s>>>(i*4+3))%GUESTS.length],t=TOPICS[(s>>>(i*6+1))%TOPICS.length];
+  eps.push({guid:`${f.slug}-${n}`,title:T[(s>>>i)%4](n,cap(t),g),published:new Date(Date.now()-(i*7+(s>>>(i*2))%5)*864e5).toUTCString().slice(0,16),duration_minutes:26+(s>>>(i*5+2))%74,guest:g,topic:t,is_new:i===0})}
+ return{lat,obj:{feed:f.url,show:f.name,checked_at:new Date().toISOString(),new_since_last_run:1,episodes:eps}}}
+async function typeCmd(c){const d=L();d.append(sp('$ ','ok'));const s=sp('');d.append(s);
+ for(const ch of c){s.textContent+=ch;out.scrollTop=out.scrollHeight;await sleep(9)}}
+async function doCheck(a){if(!a)return L('err','usage: check <show|url> — demo shows: deep-stack · founders-unplugged · the-quiet-hour');
+ const f=feed(a),sh=gen(f);
+ const d=L();d.append(sp('→ GET ','dim'),sp(f.path,''),sp(' …','dim'));
+ await sleep(sh.lat);
+ d.append(sp('  200 OK','ok'),sp(' · '+sh.lat+' ms','dim'));
+ L('dim','    etag: '+(hash(f.url)%0xfffff).toString(16)+' · last-modified: '+sh.obj.episodes[0].published);
+ const j=L('json');j.textContent=JSON.stringify(sh.obj,null,2);
+ const e=sh.obj.episodes[0];
+ L('ok','✓ metadata captured — guest “'+e.guest+'” · topic “'+e.topic+'” · '+e.duration_minutes+' min')}
+function fire(f){const s=hash(f.url),n=100+s%140+1,g=GUESTS[(s>>>5)%GUESTS.length],t=TOPICS[(s>>>11)%TOPICS.length],dur=26+(s>>>7)%74;
+ const T=[(n,t,g)=>`#${n} — ${t}, honestly, with ${g}`,(n,t,g)=>`#${n} · ${g} on ${t}`][(s>>>2)%2];
+ const d=L();d.append(sp('['+new Date().toTimeString().slice(0,8)+'] ','dim'),sp('ALERT','ok'),sp(' '+f.slug+' — new episode published',''));
+ L('dim','    “'+T(n,cap(t),g)+'” · '+dur+' min');
+ L('dim','    → would dispatch: email + Slack webhook — real delivery in the full script')}
+function doWatch(a){if(!a)return L('err','usage: watch <show|url>');
+ const f=feed(a);if(WATCH.has(f.slug))return L('dim','already watching '+f.slug+' — `status` lists your watchlist');
+ const t=setTimeout(()=>{const w=WATCH.get(f.slug);if(w){w.fired=true;fire(w.f)}},3500+Math.random()*3500);
+ WATCH.set(f.slug,{f,fired:false,t});
+ L('ok','✓ watching '+f.slug+'  ('+f.url+')');L('dim','  live poll: every 15 min · demo alert fires once below in ~5 s')}
+function doUnwatch(a){if(!a)return L('err','usage: unwatch <show>');
+ const f=feed(a),w=WATCH.get(f.slug);if(!w)return L('err','not watching '+f.slug);
+ clearTimeout(w.t);WATCH.delete(f.slug);L('ok','✓ removed '+f.slug+' from watchlist')}
+function doStatus(){if(!WATCH.size)return L('dim','watchlist empty — try: watch deep-stack');
+ for(const[slug,w]of WATCH){const d=L();d.append(sp('  ● ','ok'),sp(slug+' · polled every 15 min'+(w.fired?' · alert fired':''),'dim'))}}
+function doHelp(){L('','commands:');['  check <show|url>    fetch a feed, print structured episode metadata','  watch <show|url>    add to watchlist — one demo alert will fire','  unwatch <show>      remove from watchlist','  status              show the watchlist'].forEach(x=>L('dim',x));
+ L('dim','demo shows: deep-stack · founders-unplugged · the-quiet-hour — any https feed URL works too')}
+async function run(v){if(busy)return;busy=true;v=v.trim();
+ await typeCmd(v);const p=v.split(/\s+/).filter(Boolean);if(p[0]==='monitor')p.shift();
+ const c=(p[0]||'').toLowerCase(),a=p.slice(1).join(' ');
+ if(c==='check')await doCheck(a);else if(c==='watch')doWatch(a);else if(c==='unwatch')doUnwatch(a);
+ else if(c==='status')doStatus();else if(c==='help')doHelp();
+ else L('err',v?`monitor: unknown command '${p[0]||''}' — try help`:'usage: check <show|url> · type help');
+ busy=false}
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!busy){const v=inp.value;inp.value='';run(v)}});
+document.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{if(busy)return;inp.value='';run(b.textContent)});
+L('dim','sandbox ready — all responses are generated locally. type help, or click a chip below.');
+setTimeout(()=>run('check deep-stack'),400);
+const h=document.querySelector('h1'),w=h.textContent.trim().split(' ');
+if(w.length>2){const t=w.pop(),s=w.pop();h.innerHTML=w.join(' ')+' <span class=\'a\'>'+s+' '+t+'</span>'}
+</script>
+</body>
+</html>
